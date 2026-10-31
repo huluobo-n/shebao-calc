@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>五险一金计算器 - 社保公积金缴费粗算 · 个人/单位分摊</title>
+  <meta name="description" content="免费五险一金/社保公积金缴费粗算：输入缴费基数，可选郑州、北京、上海、广州、深圳等城市示意比例或全自定义，估算个人与单位分项及合计。仅供参考，以当地社保局/公积金中心核定为准。" />
+  <meta name="keywords" content="五险一金计算器,社保计算器,公积金计算器,缴费基数,个人缴费,单位缴费,养老医疗失业工伤生育" />
+  <meta name="robots" content="index,follow" />
+  <link rel="canonical" href="https://shebao.hpn6.com/" />
+  <style>
+    :root {
+      --bg: #f4f7fb;
+      --card: #ffffff;
+      --text: #1a2332;
+      --muted: #5a6a7a;
+      --border: #e2e8f0;
+      --primary: #2563eb;
+      --primary-hover: #1d4ed8;
+      --accent: #0d9488;
+      --warn: #b45309;
+      --good: #047857;
+      --bad: #b91c1c;
+      --shadow: 0 8px 24px rgba(26, 35, 50, 0.08);
+      --radius: 14px;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+      background: linear-gradient(180deg, #eef3ff 0%, var(--bg) 220px);
+      color: var(--text);
+      line-height: 1.55;
+    }
+    .wrap { max-width: 920px; margin: 0 auto; padding: 20px 16px 48px; }
+    header.hero { margin-bottom: 18px; }
+    header.hero h1 {
+      font-size: clamp(1.35rem, 4vw, 1.85rem);
+      margin: 0 0 8px;
+      letter-spacing: -0.02em;
+    }
+    header.hero p.lead { margin: 0; color: var(--muted); font-size: 0.98rem; }
+    .disclaimer {
+      margin: 12px 0 0;
+      padding: 10px 12px;
+      background: #fff7ed;
+      border: 1px solid #fed7aa;
+      border-radius: 10px;
+      color: var(--warn);
+      font-size: 0.9rem;
+      font-weight: 600;
+    }
+    .stats-bar {
+      display: flex; flex-wrap: wrap; gap: 10px;
+      margin: 14px 0 18px; font-size: 0.85rem; color: var(--muted);
+    }
+    .stats-bar span {
+      background: #fff; border: 1px solid var(--border);
+      border-radius: 999px; padding: 4px 12px;
+    }
+    .stats-bar strong { color: var(--text); }
+    .card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: var(--radius); box-shadow: var(--shadow);
+      padding: 18px 18px 16px; margin-bottom: 16px;
+    }
+    .card h2 { margin: 0 0 12px; font-size: 1.05rem; }
+    .card h3 { margin: 16px 0 8px; font-size: 0.95rem; color: var(--muted); font-weight: 600; }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 12px 14px;
+    }
+    .field label {
+      display: block; font-size: 0.86rem; color: var(--muted); margin-bottom: 4px;
+    }
+    .field input, .field select {
+      width: 100%; padding: 10px 12px; border: 1px solid var(--border);
+      border-radius: 10px; font-size: 1rem; background: #fff; color: var(--text);
+    }
+    .field input:focus, .field select:focus {
+      outline: 2px solid rgba(37, 99, 235, 0.25); border-color: var(--primary);
+    }
+    .field .hint { font-size: 0.78rem; color: var(--muted); margin-top: 4px; }
+    .toggles {
+      display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0 4px;
+    }
+    .toggles label {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 8px 12px; border: 1px solid var(--border); border-radius: 999px;
+      background: #fff; font-size: 0.88rem; cursor: pointer; color: var(--muted);
+    }
+    .toggles input { accent-color: var(--primary); }
+    .toggles label.active {
+      border-color: var(--primary); color: var(--primary); background: #eff6ff; font-weight: 600;
+    }
+    .city-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      align-items: end;
+      margin-top: 4px;
+    }
+    @media (max-width: 520px) {
+      .city-row { grid-template-columns: 1fr; }
+    }
+    table.rate {
+      width: 100%; border-collapse: collapse; font-size: 0.88rem; margin-top: 8px;
+    }
+    table.rate th, table.rate td {
+      border: 1px solid var(--border); padding: 8px 8px; text-align: left;
+      vertical-align: middle;
+    }
+    table.rate th { background: #f8fafc; font-weight: 600; }
+    table.rate td.item { font-weight: 600; white-space: nowrap; }
+    table.rate input[type="number"] {
+      width: 100%; min-width: 72px; padding: 8px 10px; border: 1px solid var(--border);
+      border-radius: 8px; font-size: 0.95rem; background: #fff;
+    }
+    table.rate input[type="number"]:focus {
+      outline: 2px solid rgba(37, 99, 235, 0.25); border-color: var(--primary);
+    }
+    table.rate tr.off td { opacity: 0.45; }
+    table.rate .pct::after { content: " %"; color: var(--muted); font-size: 0.8rem; }
+    .actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 16px; }
+    button {
+      appearance: none; border: none; border-radius: 10px;
+      padding: 11px 16px; font-size: 0.95rem; cursor: pointer; font-weight: 600;
+    }
+    button.primary { background: var(--primary); color: #fff; flex: 1; min-width: 140px; }
+    button.primary:hover { background: var(--primary-hover); }
+    button.ghost { background: #f1f5f9; color: var(--text); }
+    button.ghost:hover { background: #e2e8f0; }
+    .error {
+      display: none; margin-top: 12px; padding: 10px 12px;
+      border-radius: 10px; background: #fef2f2; color: var(--bad); font-size: 0.92rem;
+    }
+    .error.show { display: block; }
+    .result-hidden { display: none; }
+    .metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px; }
+    .metric {
+      background: #f8fafc; border: 1px solid var(--border);
+      border-radius: 12px; padding: 12px;
+    }
+    .metric .k { display: block; font-size: 0.8rem; color: var(--muted); margin-bottom: 4px; }
+    .metric .v { font-size: 1.1rem; font-weight: 700; letter-spacing: -0.02em; }
+    .metric .v.good { color: var(--good); }
+    .highlight {
+      margin-top: 4px; padding: 14px; border-radius: 12px;
+      background: linear-gradient(135deg, #ecfdf5, #f0f9ff);
+      border: 1px solid #bbf7d0;
+    }
+    .highlight .sub { font-size: 0.85rem; color: var(--muted); }
+    .highlight .big { font-size: 1.55rem; font-weight: 800; color: var(--good); margin: 4px 0; }
+    .note { font-size: 0.88rem; color: var(--muted); margin: 12px 0 0; }
+    .result-disclaimer {
+      margin-top: 14px; padding: 10px 12px;
+      background: #fff7ed; border: 1px solid #fed7aa; border-radius: 10px;
+      color: var(--warn); font-size: 0.9rem; font-weight: 600;
+    }
+    details.faq { border-top: 1px solid var(--border); padding: 10px 0; }
+    details.faq:first-of-type { border-top: none; }
+    details.faq summary { cursor: pointer; font-weight: 600; }
+    details.faq p { margin: 8px 0 0; color: var(--muted); font-size: 0.92rem; }
+    .copy-box {
+      margin-top: 12px; padding: 12px; background: #f8fafc;
+      border: 1px dashed var(--border); border-radius: 10px;
+      font-size: 0.88rem; white-space: pre-wrap; word-break: break-word;
+      color: var(--text); max-height: 280px; overflow: auto;
+    }
+    footer {
+      margin-top: 8px; text-align: center; color: var(--muted); font-size: 0.82rem;
+    }
+    footer .foot-warn {
+      margin: 0 0 8px; padding: 10px 12px;
+      background: #fff7ed; border: 1px solid #fed7aa; border-radius: 10px;
+      color: var(--warn); font-weight: 600; font-size: 0.88rem; text-align: left;
+    }
+    .preset-note {
+      margin-top: 8px; font-size: 0.82rem; color: var(--muted);
+      padding: 8px 10px; background: #f8fafc; border-radius: 8px; border: 1px dashed var(--border);
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header class="hero">
+      <h1>五险一金 / 社保公积金缴费粗算</h1>
+      <p class="lead">按缴费基数 × 个人/单位比例估算分项与合计 · 支持城市示意预设或全自定义 · 工伤/生育个人可为 0</p>
+      <p class="disclaimer">以当地社保局 / 公积金中心核定为准。比例、基数上下限因城而异且常调整，本页仅供粗算参考，不构成经办或法律意见。</p>
+      <div class="stats-bar" aria-label="本地使用统计">
+        <span>开始计算：<strong id="stat-start">0</strong></span>
+        <span>算出结果：<strong id="stat-done">0</strong></span>
+        <span>完成率：<strong id="stat-rate">—</strong></span>
+      </div>
+    </header>
+
+    <section class="card" aria-labelledby="input-title">
+      <h2 id="input-title">缴费基数与范围</h2>
+      <div class="grid">
+        <div class="field">
+          <label for="base">缴费基数（元/月）</label>
+          <input id="base" type="number" min="0" step="0.01" value="10000" inputmode="decimal" />
+          <div class="hint">社保与公积金可共用同一基数；实务中有的城市公积金基数单独核定，可先粗算再改</div>
+        </div>
+        <div class="field">
+          <label for="housingBase">公积金基数（可选，元/月）</label>
+          <input id="housingBase" type="number" min="0" step="0.01" value="" inputmode="decimal" placeholder="默认与社保基数相同" />
+          <div class="hint">留空则与上方缴费基数相同</div>
+        </div>
+      </div>
+
+      <div class="toggles" role="group" aria-label="计算范围">
+        <label class="active" id="lab-si">
+          <input type="checkbox" id="includeSI" checked /> 计入五险（养老/医疗/失业/工伤/生育）
+        </label>
+        <label class="active" id="lab-hf">
+          <input type="checkbox" id="includeHF" checked /> 计入公积金
+        </label>
+      </div>
+    </section>
+
+    <section class="card" aria-labelledby="rate-title">
+      <h2 id="rate-title">比例设置</h2>
+      <div class="city-row">
+        <div class="field">
+          <label for="city">城市示意预设</label>
+          <select id="city">
+            <option value="custom">全自定义（当前比例可手改）</option>
+            <option value="zhengzhou" selected>郑州（示意）</option>
+            <option value="beijing">北京（示意）</option>
+            <option value="shanghai">上海（示意）</option>
+            <option value="guangzhou">广州（示意）</option>
+            <option value="shenzhen">深圳（示意）</option>
+          </select>
+        </div>
+        <button type="button" class="ghost" id="btn-load">一键载入预设</button>
+      </div>
+      <p class="preset-note" id="preset-note">预设为公开常见示意口径，非官方核定；载入后仍可逐项修改。</p>
+
+      <div style="overflow-x:auto; margin-top:10px">
+        <table class="rate" aria-label="缴费比例表">
+          <thead>
+            <tr>
+              <th>项目</th>
+              <th>个人比例（%）</th>
+              <th>单位比例（%）</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr data-key="pension" class="si-row">
+              <td class="item">养老保险</td>
+              <td><input id="pension_p" type="number" min="0" max="100" step="0.01" inputmode="decimal" /></td>
+              <td><input id="pension_c" type="number" min="0" max="100" step="0.01" inputmode="decimal" /></td>
+            </tr>
+            <tr data-key="medical" class="si-row">
+              <td class="item">医疗保险</td>
+              <td><input id="medical_p" type="number" min="0" max="100" step="0.01" inputmode="decimal" /></td>
+              <td><input id="medical_c" type="number" min="0" max="100" step="0.01" inputmode="decimal" /></td>
+            </tr>
+            <tr data-key="unemployment" class="si-row">
+              <td class="item">失业保险</td>
+              <td><input id="unemployment_p" type="number" min="0" max="100" step="0.01" inputmode="decimal" /></td>
+              <td><input id="unemployment_c" type="number" min="0" max="100" step="0.01" inputmode="decimal" /></td>
+            </tr>
+            <tr data-key="injury" class="si-row">
+              <td class="item">工伤保险</td>
+              <td><input id="injury_p" type="number" min="0" max="100" step="0.01" inputmode="decimal" /></td>
+              <td><input id="injury_c" type="number" min="0" max="100" step="0.01" inputmode="decimal" /></td>
+            </tr>
+            <tr data-key="maternity" class="si-row">
+              <td class="item">生育保险</td>
+              <td><input id="maternity_p" type="number" min="0" max="100" step="0.01" inputmode="decimal" /></td>
+              <td><input id="maternity_c" type="number" min="0" max="100" step="0.01" inputmode="decimal" /></td>
+            </tr>
+            <tr data-key="housing" class="hf-row">
+              <td class="item">住房公积金</td>
+              <td><input id="housing_p" type="number" min="0" max="100" step="0.01" inputmode="decimal" /></td>
+              <td><input id="housing_c" type="number" min="0" max="100" step="0.01" inputmode="decimal" /></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="note">工伤、生育多数城市个人比例为 0，可直接填 0。若当地生育已并入职工医保，可将生育单位比例填 0，并在医疗单位比例中体现合并口径。</p>
+
+      <div class="actions">
+        <button type="button" class="primary" id="btn-calc">计算</button>
+        <button type="button" class="ghost" id="btn-reset">恢复郑州示例</button>
+      </div>
+      <div class="error" id="error" role="alert"></div>
+    </section>
+
+    <section class="card result-hidden" id="result" aria-live="polite">
+      <h2>计算结果</h2>
+      <div class="highlight">
+        <div class="sub">双方合计（个人 + 单位）</div>
+        <div class="big" id="out-both">¥0.00</div>
+        <div class="sub" id="out-scope"></div>
+      </div>
+      <div class="metrics" style="margin-top:12px">
+        <div class="metric"><span class="k">个人合计</span><span class="v" id="out-personal">—</span></div>
+        <div class="metric"><span class="k">单位合计</span><span class="v" id="out-company">—</span></div>
+        <div class="metric"><span class="k">社保基数</span><span class="v" id="out-base">—</span></div>
+        <div class="metric"><span class="k">公积金基数</span><span class="v" id="out-hf-base">—</span></div>
+      </div>
+
+      <h3>分项明细</h3>
+      <div style="overflow-x:auto">
+        <table class="rate" aria-label="分项明细">
+          <thead>
+            <tr>
+              <th>项目</th>
+              <th>个人比例</th>
+              <th>个人金额</th>
+              <th>单位比例</th>
+              <th>单位金额</th>
+              <th>小计</th>
+            </tr>
+          </thead>
+          <tbody id="out-rows"></tbody>
+        </table>
+      </div>
+
+      <div class="actions" style="margin-top:12px">
+        <button type="button" class="ghost" id="btn-copy">复制结果</button>
+      </div>
+      <div class="copy-box" id="copy-text" tabindex="0" aria-label="可复制的结果文本"></div>
+      <p class="note" id="copy-hint"></p>
+      <p class="result-disclaimer">以上为粗算。实际扣缴以当地社保局 / 公积金中心核定的基数上下限、险种口径与当期比例为准。</p>
+    </section>
+
+    <section class="card" aria-labelledby="faq-title">
+      <h2 id="faq-title">常见问题</h2>
+      <details class="faq">
+        <summary>城市预设准不准？</summary>
+        <p>不准作官方依据。预设是公开渠道常见的示意比例（约 2024–2025 口径），用于快速起步；工伤因行业浮动大，默认取中低档示意。载入后请按工资条或单位人事给的比例改。</p>
+      </details>
+      <details class="faq">
+        <summary>缴费基数怎么填？</summary>
+        <p>一般是上年度月均工资，经当地上下限封顶保底后的核定值。若你不知道核定基数，可先用合同工资或应发工资粗算，结果仅供参考。</p>
+      </details>
+      <details class="faq">
+        <summary>生育保险个人为什么是 0？</summary>
+        <p>多数城市生育保险仅单位缴纳、个人为 0；不少地方已并入职工医保。若你那边已合并，把生育单位比例设为 0，并确认医疗单位比例是否已含合并部分。</p>
+      </details>
+      <details class="faq">
+        <summary>公积金比例范围？</summary>
+        <p>各地常见可在 5%–12% 之间由单位选择（个人与单位通常同比例），以当地住房公积金管理中心规定为准。</p>
+      </details>
+    </section>
+
+    <footer>
+      <p class="foot-warn">以当地社保局 / 公积金中心核定为准。比例与基数上下限因城而异，本页仅供粗算参考。</p>
+      数据仅在浏览器本地计算，不上传服务器。<br />
+      <!-- analytics: localStorage counters; swap later for Umami/Plausible -->
+    </footer>
+  </div>
+
+  <script>
+  (function () {
+    "use strict";
+
+    var STORAGE_KEY = "shebao_calc_stats_v1";
+
+    /**
+     * 城市示意预设说明（非官方核定）：
+     * - 养老个人 8%、单位 16% 为全国常见职工基本养老保险口径（部分省份单位比例曾阶段性下调，如粤等，此处广州/深圳单位按公开常见 14% 示意）。
+     * - 医疗/失业/工伤/生育：综合公开计算器与地方常见公布口径的近似值；工伤取行业中低档示意；生育在北京等可能已计入医保合并口径，此处仍拆列便于手改。
+     * - 公积金：北京常见 12%/12%，沪深穗常见 5%–7% 档示意，郑州取 10%/10%。
+     * 一律可在载入后修改。
+     */
+    var PRESETS = {
+      zhengzhou: {
+        label: "郑州（示意）",
+        note: "郑州示意：养老 8/16，医疗 2/8，失业 0.3/0.7，工伤 0/0.4，生育 0/1，公积金 10/10。非社保局核定。",
+        rates: {
+          pension_p: 8, pension_c: 16,
+          medical_p: 2, medical_c: 8,
+          unemployment_p: 0.3, unemployment_c: 0.7,
+          injury_p: 0, injury_c: 0.4,
+          maternity_p: 0, maternity_c: 1,
+          housing_p: 10, housing_c: 10
+        }
+      },
+      beijing: {
+        label: "北京（示意）",
+        note: "北京示意：养老 8/16，医疗 2/8.8，失业 0.5/0.5，工伤 0/0.4，生育 0/0.8，公积金 12/12。实务中生育常并入医保，请按工资条调整。",
+        rates: {
+          pension_p: 8, pension_c: 16,
+          medical_p: 2, medical_c: 8.8,
+          unemployment_p: 0.5, unemployment_c: 0.5,
+          injury_p: 0, injury_c: 0.4,
+          maternity_p: 0, maternity_c: 0.8,
+          housing_p: 12, housing_c: 12
+        }
+      },
+      shanghai: {
+        label: "上海（示意）",
+        note: "上海示意：养老 8/16，医疗 2/10，失业 0.5/0.5，工伤 0/0.16，生育 0/1，公积金 7/7。工伤因行业浮动大。",
+        rates: {
+          pension_p: 8, pension_c: 16,
+          medical_p: 2, medical_c: 10,
+          unemployment_p: 0.5, unemployment_c: 0.5,
+          injury_p: 0, injury_c: 0.16,
+          maternity_p: 0, maternity_c: 1,
+          housing_p: 7, housing_c: 7
+        }
+      },
+      guangzhou: {
+        label: "广州（示意）",
+        note: "广州示意：养老 8/14（粤常见单位档），医疗 2/5.5，失业 0.2/0.8，工伤 0/0.4，生育 0/0.85，公积金 5/5。请以当地当期为准。",
+        rates: {
+          pension_p: 8, pension_c: 14,
+          medical_p: 2, medical_c: 5.5,
+          unemployment_p: 0.2, unemployment_c: 0.8,
+          injury_p: 0, injury_c: 0.4,
+          maternity_p: 0, maternity_c: 0.85,
+          housing_p: 5, housing_c: 5
+        }
+      },
+      shenzhen: {
+        label: "深圳（示意）",
+        note: "深圳示意：养老 8/14，医疗 2/5.2（一档常见示意），失业 0.3/0.7，工伤 0/0.4，生育 0/0.45，公积金 5/5。深户/非深户医保分档差异大。",
+        rates: {
+          pension_p: 8, pension_c: 14,
+          medical_p: 2, medical_c: 5.2,
+          unemployment_p: 0.3, unemployment_c: 0.7,
+          injury_p: 0, injury_c: 0.4,
+          maternity_p: 0, maternity_c: 0.45,
+          housing_p: 5, housing_c: 5
+        }
+      }
+    };
+
+    var ITEMS = [
+      { key: "pension", name: "养老保险", group: "si", p: "pension_p", c: "pension_c" },
+      { key: "medical", name: "医疗保险", group: "si", p: "medical_p", c: "medical_c" },
+      { key: "unemployment", name: "失业保险", group: "si", p: "unemployment_p", c: "unemployment_c" },
+      { key: "injury", name: "工伤保险", group: "si", p: "injury_p", c: "injury_c" },
+      { key: "maternity", name: "生育保险", group: "si", p: "maternity_p", c: "maternity_c" },
+      { key: "housing", name: "住房公积金", group: "hf", p: "housing_p", c: "housing_c" }
+    ];
+
+    function loadStats() {
+      try {
+        var raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return { start: 0, done: 0 };
+        var o = JSON.parse(raw);
+        return { start: Number(o.start) || 0, done: Number(o.done) || 0 };
+      } catch (e) {
+        return { start: 0, done: 0 };
+      }
+    }
+    function saveStats(s) {
+      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(s)); } catch (e) {}
+    }
+    function renderStats() {
+      var s = loadStats();
+      document.getElementById("stat-start").textContent = String(s.start);
+      document.getElementById("stat-done").textContent = String(s.done);
+      document.getElementById("stat-rate").textContent =
+        s.start > 0 ? ((s.done / s.start) * 100).toFixed(1) + "%" : "—";
+    }
+    function bump(kind) {
+      var s = loadStats();
+      if (kind === "start") s.start += 1;
+      if (kind === "done") s.done += 1;
+      saveStats(s);
+      renderStats();
+    }
+    renderStats();
+
+    function money(n) {
+      if (!isFinite(n)) return "—";
+      var rounded = Math.round(n * 100) / 100;
+      return "¥" + rounded.toLocaleString("zh-CN", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      });
+    }
+    function pctText(n) {
+      if (!isFinite(n)) return "—";
+      return (Math.round(n * 100) / 100) + "%";
+    }
+    function num(id) {
+      var el = document.getElementById(id);
+      if (!el) return NaN;
+      var v = parseFloat(el.value);
+      return isFinite(v) ? v : NaN;
+    }
+    function setError(msg) {
+      var el = document.getElementById("error");
+      if (msg) {
+        el.textContent = msg;
+        el.classList.add("show");
+      } else {
+        el.textContent = "";
+        el.classList.remove("show");
+      }
+    }
+
+    function applyRates(rates) {
+      Object.keys(rates).forEach(function (k) {
+        var el = document.getElementById(k);
+        if (el) el.value = String(rates[k]);
+      });
+    }
+
+    function loadCity(id) {
+      var preset = PRESETS[id];
+      if (!preset) {
+        document.getElementById("preset-note").textContent =
+          "全自定义：请直接改表中个人/单位比例。工伤、生育个人可为 0。";
+        return;
+      }
+      applyRates(preset.rates);
+      document.getElementById("preset-note").textContent = preset.note;
+    }
+
+    function updateToggleLabels() {
+      document.getElementById("lab-si").classList.toggle("active", document.getElementById("includeSI").checked);
+      document.getElementById("lab-hf").classList.toggle("active", document.getElementById("includeHF").checked);
+      var siOn = document.getElementById("includeSI").checked;
+      var hfOn = document.getElementById("includeHF").checked;
+      document.querySelectorAll("tr.si-row").forEach(function (tr) {
+        tr.classList.toggle("off", !siOn);
+      });
+      document.querySelectorAll("tr.hf-row").forEach(function (tr) {
+        tr.classList.toggle("off", !hfOn);
+      });
+    }
+
+    function readRate(id) {
+      var v = num(id);
+      if (!isFinite(v) || v < 0) return NaN;
+      return v;
+    }
+
+    function calc() {
+      bump("start");
+      setError("");
+
+      var base = num("base");
+      if (!isFinite(base) || base < 0) {
+        setError("请填写有效的缴费基数（≥0）。");
+        return;
+      }
+      var hfBaseRaw = document.getElementById("housingBase").value;
+      var hfBase = hfBaseRaw === "" ? base : parseFloat(hfBaseRaw);
+      if (!isFinite(hfBase) || hfBase < 0) {
+        setError("公积金基数无效；可留空以使用社保基数。");
+        return;
+      }
+
+      var siOn = document.getElementById("includeSI").checked;
+      var hfOn = document.getElementById("includeHF").checked;
+      if (!siOn && !hfOn) {
+        setError("请至少勾选「五险」或「公积金」之一。");
+        return;
+      }
+
+      var citySel = document.getElementById("city");
+      var cityLabel = citySel.options[citySel.selectedIndex].text;
+
+      var rows = [];
+      var personalSum = 0;
+      var companySum = 0;
+
+      for (var i = 0; i < ITEMS.length; i++) {
+        var it = ITEMS[i];
+        if (it.group === "si" && !siOn) continue;
+        if (it.group === "hf" && !hfOn) continue;
+
+        var rp = readRate(it.p);
+        var rc = readRate(it.c);
+        if (!isFinite(rp) || !isFinite(rc)) {
+          setError("「" + it.name + "」比例无效，请填写 ≥0 的数字（可为 0）。");
+          return;
+        }
+        var useBase = it.group === "hf" ? hfBase : base;
+        var pAmt = useBase * rp / 100;
+        var cAmt = useBase * rc / 100;
+        personalSum += pAmt;
+        companySum += cAmt;
+        rows.push({
+          name: it.name,
+          rp: rp,
+          rc: rc,
+          pAmt: pAmt,
+          cAmt: cAmt,
+          sub: pAmt + cAmt,
+          base: useBase
+        });
+      }
+
+      bump("done");
+
+      document.getElementById("result").classList.remove("result-hidden");
+      document.getElementById("out-both").textContent = money(personalSum + companySum);
+      document.getElementById("out-personal").textContent = money(personalSum);
+      document.getElementById("out-company").textContent = money(companySum);
+      document.getElementById("out-base").textContent = money(base);
+      document.getElementById("out-hf-base").textContent = hfOn ? money(hfBase) : "未计入";
+      document.getElementById("out-scope").textContent =
+        "范围：" + (siOn ? "五险" : "") + (siOn && hfOn ? " + " : "") + (hfOn ? "公积金" : "") +
+        " · 预设/城市：" + cityLabel;
+
+      var tbody = document.getElementById("out-rows");
+      tbody.innerHTML = "";
+      rows.forEach(function (r) {
+        var tr = document.createElement("tr");
+        tr.innerHTML =
+          "<td class=\"item\">" + r.name + "</td>" +
+          "<td>" + pctText(r.rp) + "</td>" +
+          "<td>" + money(r.pAmt) + "</td>" +
+          "<td>" + pctText(r.rc) + "</td>" +
+          "<td>" + money(r.cAmt) + "</td>" +
+          "<td>" + money(r.sub) + "</td>";
+        tbody.appendChild(tr);
+      });
+      var sumTr = document.createElement("tr");
+      sumTr.innerHTML =
+        "<td class=\"item\">合计</td>" +
+        "<td>—</td>" +
+        "<td><strong>" + money(personalSum) + "</strong></td>" +
+        "<td>—</td>" +
+        "<td><strong>" + money(companySum) + "</strong></td>" +
+        "<td><strong>" + money(personalSum + companySum) + "</strong></td>";
+      tbody.appendChild(sumTr);
+
+      var lines = [];
+      lines.push("【五险一金缴费粗算】");
+      lines.push("城市/预设：" + cityLabel);
+      lines.push("社保基数：" + money(base) + "/月");
+      if (hfOn) lines.push("公积金基数：" + money(hfBase) + "/月");
+      lines.push("范围：" + (siOn ? "五险" : "") + (siOn && hfOn ? "+" : "") + (hfOn ? "公积金" : ""));
+      lines.push("");
+      lines.push("分项：");
+      rows.forEach(function (r) {
+        lines.push(
+          "- " + r.name +
+          "：个人 " + pctText(r.rp) + " → " + money(r.pAmt) +
+          "；单位 " + pctText(r.rc) + " → " + money(r.cAmt) +
+          "；小计 " + money(r.sub)
+        );
+      });
+      lines.push("");
+      lines.push("个人合计：" + money(personalSum));
+      lines.push("单位合计：" + money(companySum));
+      lines.push("双方合计：" + money(personalSum + companySum));
+      lines.push("");
+      lines.push("免责：以当地社保局/公积金中心核定为准；本页仅供粗算参考。");
+      document.getElementById("copy-text").textContent = lines.join("\n");
+      document.getElementById("copy-hint").textContent = "";
+
+      try {
+        document.getElementById("result").scrollIntoView({ behavior: "smooth", block: "nearest" });
+      } catch (e) {}
+    }
+
+    function copyResult() {
+      var text = document.getElementById("copy-text").textContent;
+      if (!text) return;
+      function ok() {
+        document.getElementById("copy-hint").textContent = "已复制到剪贴板。";
+      }
+      function fail() {
+        document.getElementById("copy-hint").textContent = "复制失败，请长按上方文本手动复制。";
+      }
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(ok).catch(fail);
+      } else {
+        try {
+          var ta = document.createElement("textarea");
+          ta.value = text;
+          document.body.appendChild(ta);
+          ta.select();
+          document.execCommand("copy");
+          document.body.removeChild(ta);
+          ok();
+        } catch (e) {
+          fail();
+        }
+      }
+    }
+
+    function resetExample() {
+      document.getElementById("base").value = "10000";
+      document.getElementById("housingBase").value = "";
+      document.getElementById("includeSI").checked = true;
+      document.getElementById("includeHF").checked = true;
+      document.getElementById("city").value = "zhengzhou";
+      loadCity("zhengzhou");
+      updateToggleLabels();
+      setError("");
+      document.getElementById("result").classList.add("result-hidden");
+    }
+
+    document.getElementById("btn-load").addEventListener("click", function () {
+      var id = document.getElementById("city").value;
+      loadCity(id);
+    });
+    document.getElementById("city").addEventListener("change", function () {
+      var id = document.getElementById("city").value;
+      if (id !== "custom") loadCity(id);
+      else {
+        document.getElementById("preset-note").textContent =
+          "全自定义：请直接改表中个人/单位比例。工伤、生育个人可为 0。";
+      }
+    });
+    document.getElementById("includeSI").addEventListener("change", updateToggleLabels);
+    document.getElementById("includeHF").addEventListener("change", updateToggleLabels);
+    document.getElementById("btn-calc").addEventListener("click", calc);
+    document.getElementById("btn-reset").addEventListener("click", resetExample);
+    document.getElementById("btn-copy").addEventListener("click", copyResult);
+
+    // init
+    loadCity("zhengzhou");
+    updateToggleLabels();
+  })();
+  </script>
+</body>
+</html>
