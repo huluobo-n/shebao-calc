@@ -212,6 +212,7 @@
     }
 </style>
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2118305643241262" crossorigin="anonymous"></script>
+  <script src="https://hpn6.com/t/hpn6-stats.js" data-site="shebao" defer></script>
 </head>
 <body>
   <div class="wrap">
@@ -512,6 +513,7 @@
       if (kind === "done") s.done += 1;
       saveStats(s);
       renderStats();
+      if (kind === "done" && window.hpn6track) window.hpn6track("calc");
     }
     renderStats();
 
